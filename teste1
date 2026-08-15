@@ -1,0 +1,690 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local Player = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local Settings = {
+	ESP = false,
+	ESPBox = true,
+	ESPHealth = true,
+	ESPDistance = true,
+	ESPLine = true,
+
+	Aimbot = false,
+	AimPart = "Head",
+
+	SilentAim = false,
+	SilentPart = "Head",
+
+	FOV = 150,
+
+	Spin = false,
+	AutoMove = false,
+	Walker = false
+}
+
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "Sukuna"
+Gui.ResetOnSpawn = false
+Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+Gui.Parent = Player:WaitForChild("PlayerGui")
+
+local Open = Instance.new("TextButton")
+Open.Size = UDim2.fromOffset(65,65)
+Open.Position = UDim2.new(0,20,.5,-32)
+Open.Text = "S"
+Open.Font = Enum.Font.GothamBlack
+Open.TextSize = 28
+Open.TextColor3 = Color3.new(1,1,1)
+Open.BackgroundColor3 = Color3.fromRGB(18,18,25)
+Open.Parent = Gui
+
+Instance.new("UICorner",Open).CornerRadius = UDim.new(1,0)
+
+local Main = Instance.new("Frame")
+Main.Size = UDim2.fromOffset(570,430)
+Main.Position = UDim2.new(.5,-285,.5,-215)
+Main.BackgroundColor3 = Color3.fromRGB(14,14,20)
+Main.BorderSizePixel = 0
+Main.Parent = Gui
+
+Instance.new("UICorner",Main).CornerRadius = UDim.new(0,16)
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Thickness = 2
+MainStroke.Parent = Main
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1,-80,0,55)
+Title.Position = UDim2.fromOffset(20,5)
+Title.BackgroundTransparency = 1
+Title.Text = "SUKUNA"
+Title.Font = Enum.Font.GothamBlack
+Title.TextSize = 26
+Title.TextColor3 = Color3.new(1,1,1)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = Main
+
+local Subtitle = Instance.new("TextLabel")
+Subtitle.Size = UDim2.new(1,-80,0,20)
+Subtitle.Position = UDim2.fromOffset(21,34)
+Subtitle.BackgroundTransparency = 1
+Subtitle.Text = "Combat Panel"
+Subtitle.Font = Enum.Font.Gotham
+Subtitle.TextSize = 11
+Subtitle.TextColor3 = Color3.fromRGB(150,150,160)
+Subtitle.TextXAlignment = Enum.TextXAlignment.Left
+Subtitle.Parent = Main
+
+local Close = Instance.new("TextButton")
+Close.Size = UDim2.fromOffset(40,40)
+Close.Position = UDim2.new(1,-50,0,10)
+Close.Text = "×"
+Close.Font = Enum.Font.GothamBold
+Close.TextSize = 27
+Close.TextColor3 = Color3.new(1,1,1)
+Close.BackgroundColor3 = Color3.fromRGB(32,32,42)
+Close.Parent = Main
+
+Instance.new("UICorner",Close).CornerRadius = UDim.new(0,10)
+
+Close.MouseButton1Click:Connect(function()
+	Main.Visible = false
+	Open.Visible = true
+end)
+
+Open.MouseButton1Click:Connect(function()
+	Main.Visible = true
+	Open.Visible = false
+end)
+
+local Tabs = Instance.new("Frame")
+Tabs.Size = UDim2.fromOffset(135,350)
+Tabs.Position = UDim2.fromOffset(10,68)
+Tabs.BackgroundColor3 = Color3.fromRGB(20,20,27)
+Tabs.BorderSizePixel = 0
+Tabs.Parent = Main
+
+Instance.new("UICorner",Tabs).CornerRadius = UDim.new(0,12)
+
+local TabLayout = Instance.new("UIListLayout")
+TabLayout.Padding = UDim.new(0,5)
+TabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+TabLayout.Parent = Tabs
+
+local TabPadding = Instance.new("UIPadding")
+TabPadding.PaddingTop = UDim.new(0,8)
+TabPadding.Parent = Tabs
+
+local Pages = Instance.new("Frame")
+Pages.Size = UDim2.fromOffset(405,350)
+Pages.Position = UDim2.fromOffset(150,68)
+Pages.BackgroundTransparency = 1
+Pages.Parent = Main
+
+local PageList = {}
+
+local function NewTab(Name)
+
+	local Button = Instance.new("TextButton")
+	Button.Size = UDim2.fromOffset(120,40)
+	Button.BackgroundColor3 = Color3.fromRGB(30,30,40)
+	Button.Text = Name
+	Button.Font = Enum.Font.GothamBold
+	Button.TextSize = 13
+	Button.TextColor3 = Color3.new(1,1,1)
+	Button.Parent = Tabs
+
+	Instance.new("UICorner",Button).CornerRadius = UDim.new(0,8)
+
+	local Page = Instance.new("ScrollingFrame")
+	Page.Size = UDim2.fromScale(1,1)
+	Page.BackgroundColor3 = Color3.fromRGB(19,19,26)
+	Page.BorderSizePixel = 0
+	Page.ScrollBarThickness = 3
+	Page.CanvasSize = UDim2.fromOffset(0,700)
+	Page.Visible = false
+	Page.Parent = Pages
+
+	Instance.new("UICorner",Page).CornerRadius = UDim.new(0,12)
+
+	local Layout = Instance.new("UIListLayout")
+	Layout.Padding = UDim.new(0,7)
+	Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	Layout.Parent = Page
+
+	local Padding = Instance.new("UIPadding")
+	Padding.PaddingTop = UDim.new(0,10)
+	Padding.Parent = Page
+
+	PageList[Name] = Page
+
+	Button.MouseButton1Click:Connect(function()
+
+		for _,p in pairs(PageList) do
+			p.Visible = false
+		end
+
+		Page.Visible = true
+	end)
+
+	return Page
+end
+
+local ESPPage = NewTab("ESP")
+local AimPage = NewTab("Aimbot")
+local SilentPage = NewTab("Silent Aim")
+local FOVPage = NewTab("FOV")
+local WalkerPage = NewTab("Walker")
+local MovePage = NewTab("Movimento")
+local CalcPage = NewTab("Calculadora")
+
+ESPPage.Visible = true
+
+local function Toggle(Page,Name,Default,Callback)
+
+	local Value = Default
+
+	local Button = Instance.new("TextButton")
+	Button.Size = UDim2.new(1,-20,0,43)
+	Button.BackgroundColor3 = Color3.fromRGB(31,31,41)
+	Button.TextColor3 = Color3.new(1,1,1)
+	Button.Font = Enum.Font.GothamBold
+	Button.TextSize = 14
+	Button.Parent = Page
+
+	Instance.new("UICorner",Button).CornerRadius = UDim.new(0,8)
+
+	local function Update()
+
+		Button.Text = Name.." : "..(Value and "ON" or "OFF")
+
+		if Value then
+			Button.BackgroundColor3 = Color3.fromRGB(50,50,65)
+		else
+			Button.BackgroundColor3 = Color3.fromRGB(31,31,41)
+		end
+	end
+
+	Update()
+
+	Button.MouseButton1Click:Connect(function()
+
+		Value = not Value
+		Update()
+
+		Callback(Value)
+	end)
+end
+
+local function Selector(Page,Name,Options,Callback)
+
+	local Index = 1
+
+	local Button = Instance.new("TextButton")
+	Button.Size = UDim2.new(1,-20,0,43)
+	Button.BackgroundColor3 = Color3.fromRGB(31,31,41)
+	Button.TextColor3 = Color3.new(1,1,1)
+	Button.Font = Enum.Font.GothamBold
+	Button.TextSize = 14
+	Button.Text = Name.." : "..Options[Index]
+	Button.Parent = Page
+
+	Instance.new("UICorner",Button).CornerRadius = UDim.new(0,8)
+
+	Button.MouseButton1Click:Connect(function()
+
+		Index += 1
+
+		if Index > #Options then
+			Index = 1
+		end
+
+		Button.Text = Name.." : "..Options[Index]
+
+		Callback(Options[Index])
+	end)
+end
+
+Toggle(ESPPage,"ESP",false,function(v)
+	Settings.ESP = v
+end)
+
+Toggle(ESPPage,"Box",true,function(v)
+	Settings.ESPBox = v
+end)
+
+Toggle(ESPPage,"Vida",true,function(v)
+	Settings.ESPHealth = v
+end)
+
+Toggle(ESPPage,"Distância",true,function(v)
+	Settings.ESPDistance = v
+end)
+
+Toggle(ESPPage,"Linhas",true,function(v)
+	Settings.ESPLine = v
+end)
+
+Toggle(AimPage,"Aimbot",false,function(v)
+	Settings.Aimbot = v
+end)
+
+Selector(AimPage,"Alvo",{"Head","Torso"},function(v)
+	Settings.AimPart = v
+end)
+
+Toggle(SilentPage,"Silent Aim",false,function(v)
+	Settings.SilentAim = v
+end)
+
+Selector(SilentPage,"Alvo",{"Head","Torso"},function(v)
+	Settings.SilentPart = v
+end)
+
+local SilentInfo = Instance.new("TextLabel")
+SilentInfo.Size = UDim2.new(1,-20,0,75)
+SilentInfo.BackgroundTransparency = 1
+SilentInfo.TextWrapped = true
+SilentInfo.Text = "Silent Aim utiliza o alvo selecionado dentro do FOV para o sistema de combate do seu jogo."
+SilentInfo.Font = Enum.Font.Gotham
+SilentInfo.TextSize = 12
+SilentInfo.TextColor3 = Color3.fromRGB(165,165,175)
+SilentInfo.Parent = SilentPage
+
+local FOVText = Instance.new("TextLabel")
+FOVText.Size = UDim2.new(1,-20,0,43)
+FOVText.BackgroundColor3 = Color3.fromRGB(31,31,41)
+FOVText.Text = "FOV : 150"
+FOVText.TextColor3 = Color3.new(1,1,1)
+FOVText.Font = Enum.Font.GothamBold
+FOVText.TextSize = 15
+FOVText.Parent = FOVPage
+
+Instance.new("UICorner",FOVText).CornerRadius = UDim.new(0,8)
+
+local FOVButton = Instance.new("TextButton")
+FOVButton.Size = UDim2.new(1,-20,0,43)
+FOVButton.BackgroundColor3 = Color3.fromRGB(31,31,41)
+FOVButton.Text = "Alterar FOV"
+FOVButton.TextColor3 = Color3.new(1,1,1)
+FOVButton.Font = Enum.Font.GothamBold
+FOVButton.TextSize = 14
+FOVButton.Parent = FOVPage
+
+Instance.new("UICorner",FOVButton).CornerRadius = UDim.new(0,8)
+
+FOVButton.MouseButton1Click:Connect(function()
+
+	Settings.FOV += 25
+
+	if Settings.FOV > 500 then
+		Settings.FOV = 50
+	end
+
+	FOVText.Text = "FOV : "..Settings.FOV
+end)
+
+Selector(FOVPage,"Mira",{"Head","Torso"},function(v)
+	Settings.AimPart = v
+end)
+
+Toggle(WalkerPage,"Walker",false,function(v)
+	Settings.Walker = v
+end)
+
+local WalkerInfo = Instance.new("TextLabel")
+WalkerInfo.Size = UDim2.new(1,-20,0,90)
+WalkerInfo.BackgroundTransparency = 1
+WalkerInfo.TextWrapped = true
+WalkerInfo.Text = "Walker detecta jogadores próximos e pode ser conectado ao sistema de knockback do seu jogo."
+WalkerInfo.Font = Enum.Font.Gotham
+WalkerInfo.TextSize = 12
+WalkerInfo.TextColor3 = Color3.fromRGB(165,165,175)
+WalkerInfo.Parent = WalkerPage
+
+Toggle(MovePage,"Giro 360°",false,function(v)
+	Settings.Spin = v
+end)
+
+Toggle(MovePage,"Movimento automático",false,function(v)
+	Settings.AutoMove = v
+end)
+
+local Calculator = Instance.new("TextBox")
+Calculator.Size = UDim2.new(1,-20,0,50)
+Calculator.BackgroundColor3 = Color3.fromRGB(31,31,41)
+Calculator.PlaceholderText = "Digite uma conta"
+Calculator.Text = ""
+Calculator.TextColor3 = Color3.new(1,1,1)
+Calculator.Font = Enum.Font.GothamBold
+Calculator.TextSize = 16
+Calculator.Parent = CalcPage
+
+Instance.new("UICorner",Calculator).CornerRadius = UDim.new(0,8)
+
+local Calculate = Instance.new("TextButton")
+Calculate.Size = UDim2.new(1,-20,0,45)
+Calculate.BackgroundColor3 = Color3.fromRGB(31,31,41)
+Calculate.Text = "CALCULAR"
+Calculate.TextColor3 = Color3.new(1,1,1)
+Calculate.Font = Enum.Font.GothamBold
+Calculate.TextSize = 14
+Calculate.Parent = CalcPage
+
+Instance.new("UICorner",Calculate).CornerRadius = UDim.new(0,8)
+
+local Result = Instance.new("TextLabel")
+Result.Size = UDim2.new(1,-20,0,45)
+Result.BackgroundTransparency = 1
+Result.Text = "Resultado:"
+Result.TextColor3 = Color3.new(1,1,1)
+Result.Font = Enum.Font.GothamBold
+Result.TextSize = 16
+Result.Parent = CalcPage
+
+Calculate.MouseButton1Click:Connect(function()
+
+	local Expression = Calculator.Text
+
+	if not Expression:match("^[%d%s%+%-%*/%.%(%)]+$") then
+		Result.Text = "Resultado: inválido"
+		return
+	end
+
+	local Function = loadstring("return "..Expression)
+
+	if not Function then
+		Result.Text = "Resultado: erro"
+		return
+	end
+
+	local Success,Value = pcall(Function)
+
+	if Success then
+		Result.Text = "Resultado: "..tostring(Value)
+	else
+		Result.Text = "Resultado: erro"
+	end
+end)
+
+local FOVCircle = Instance.new("Frame")
+FOVCircle.BackgroundTransparency = 1
+FOVCircle.AnchorPoint = Vector2.new(.5,.5)
+FOVCircle.Position = UDim2.new(.5,0,.5,0)
+FOVCircle.Size = UDim2.fromOffset(300,300)
+FOVCircle.Parent = Gui
+
+Instance.new("UICorner",FOVCircle).CornerRadius = UDim.new(1,0)
+
+local FOVStroke = Instance.new("UIStroke")
+FOVStroke.Thickness = 2
+FOVStroke.Parent = FOVCircle
+
+local ESP = {}
+
+local function RemoveESP(Player)
+
+	if ESP[Player] then
+
+		if ESP[Player].Highlight then
+			ESP[Player].Highlight:Destroy()
+		end
+
+		if ESP[Player].Billboard then
+			ESP[Player].Billboard:Destroy()
+		end
+
+		ESP[Player] = nil
+	end
+end
+
+local function CreateESP(Player)
+
+	if Player == LocalPlayer then
+		return
+	end
+
+	local Character = Player.Character
+
+	if not Character then
+		return
+	end
+
+	RemoveESP(Player)
+
+	local Highlight = Instance.new("Highlight")
+	Highlight.Name = "SukunaESP"
+	Highlight.FillTransparency = 1
+	Highlight.OutlineTransparency = 0
+	Highlight.Adornee = Character
+	Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	Highlight.Parent = Character
+
+	local Billboard = Instance.new("BillboardGui")
+	Billboard.Size = UDim2.fromOffset(180,50)
+	Billboard.StudsOffset = Vector3.new(0,3,0)
+	Billboard.AlwaysOnTop = true
+	Billboard.Adornee = Character:FindFirstChild("Head")
+	Billboard.Parent = Gui
+
+	local Text = Instance.new("TextLabel")
+	Text.Size = UDim2.fromScale(1,1)
+	Text.BackgroundTransparency = 1
+	Text.TextColor3 = Color3.new(1,1,1)
+	Text.Font = Enum.Font.GothamBold
+	Text.TextSize = 12
+	Text.Parent = Billboard
+
+	ESP[Player] = {
+		Highlight = Highlight,
+		Billboard = Billboard,
+		Text = Text
+	}
+end
+
+local function GetTarget(PartName)
+
+	local Closest
+	local ClosestDistance = math.huge
+
+	local Center = Vector2.new(
+		Camera.ViewportSize.X/2,
+		Camera.ViewportSize.Y/2
+	)
+
+	for _,Target in ipairs(Players:GetPlayers()) do
+
+		if Target ~= LocalPlayer then
+
+			local Character = Target.Character
+			local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+			local Part = Character and Character:FindFirstChild(PartName)
+
+			if Humanoid and Humanoid.Health > 0 and Part then
+
+				local Position,Visible =
+					Camera:WorldToViewportPoint(Part.Position)
+
+				if Visible then
+
+					local Distance =
+						(Vector2.new(Position.X,Position.Y)-Center).Magnitude
+
+					if Distance <= Settings.FOV and Distance < ClosestDistance then
+
+						Closest = Part
+						ClosestDistance = Distance
+					end
+				end
+			end
+		end
+	end
+
+	return Closest
+end
+
+RunService.RenderStepped:Connect(function()
+
+	local RGB = Color3.fromHSV((tick()%5)/5,1,1)
+
+	MainStroke.Color = RGB
+	FOVStroke.Color = RGB
+	Open.TextColor3 = RGB
+
+	FOVCircle.Size =
+		UDim2.fromOffset(
+			Settings.FOV*2,
+			Settings.FOV*2
+		)
+
+	if Settings.Aimbot then
+
+		local Target = GetTarget(Settings.AimPart)
+
+		if Target then
+
+			Camera.CFrame =
+				CFrame.new(
+					Camera.CFrame.Position,
+					Target.Position
+				)
+		end
+	end
+
+	if Settings.ESP then
+
+		for _,Target in ipairs(Players:GetPlayers()) do
+
+			if Target ~= LocalPlayer then
+
+				if not ESP[Target] then
+					CreateESP(Target)
+				end
+
+				local Data = ESP[Target]
+				local Character = Target.Character
+
+				if Data and Character then
+
+					local Humanoid =
+						Character:FindFirstChildOfClass("Humanoid")
+
+					local Root =
+						Character:FindFirstChild("HumanoidRootPart")
+
+					if Humanoid and Root then
+
+						Data.Highlight.OutlineColor = RGB
+
+						local Distance =
+							(Root.Position-Camera.CFrame.Position).Magnitude
+
+						local Text = Target.Name
+
+						if Settings.ESPHealth then
+							Text ..= "\nHP: "..math.floor(Humanoid.Health)
+						end
+
+						if Settings.ESPDistance then
+							Text ..= " | "..math.floor(Distance).."m"
+						end
+
+						Data.Text.Text = Text
+						Data.Highlight.Enabled = Settings.ESPBox
+						Data.Billboard.Enabled =
+							Settings.ESPHealth or Settings.ESPDistance
+					end
+				end
+			end
+		end
+
+	else
+
+		for Target in pairs(ESP) do
+			RemoveESP(Target)
+		end
+	end
+
+	if Settings.Spin then
+
+		local Character = Player.Character
+		local Root = Character and Character:FindFirstChild("HumanoidRootPart")
+
+		if Root then
+			Root.CFrame =
+				Root.CFrame*CFrame.Angles(0,math.rad(15),0)
+		end
+	end
+
+	if Settings.AutoMove then
+
+		local Character = Player.Character
+		local Humanoid =
+			Character and Character:FindFirstChildOfClass("Humanoid")
+
+		if Humanoid then
+
+			local Direction = Camera.CFrame.LookVector
+
+			Humanoid:Move(
+				Vector3.new(Direction.X,0,Direction.Z),
+				false
+			)
+		end
+	end
+end)
+
+Players.PlayerRemoving:Connect(function(Player)
+	RemoveESP(Player)
+end)
+
+Player.CharacterAdded:Connect(function()
+	task.wait(1)
+
+	for Target in pairs(ESP) do
+		RemoveESP(Target)
+	end
+end)
+
+local Dragging = false
+local DragStart
+local StartPosition
+
+Title.InputBegan:Connect(function(Input)
+
+	if Input.UserInputType == Enum.UserInputType.MouseButton1
+		or Input.UserInputType == Enum.UserInputType.Touch then
+
+		Dragging = true
+		DragStart = Input.Position
+		StartPosition = Main.Position
+
+		Input.Changed:Connect(function()
+
+			if Input.UserInputState == Enum.UserInputState.End then
+				Dragging = false
+			end
+		end)
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(Input)
+
+	if Dragging and
+		(Input.UserInputType == Enum.UserInputType.MouseMovement
+		or Input.UserInputType == Enum.UserInputType.Touch) then
+
+		local Delta = Input.Position-DragStart
+
+		Main.Position =
+			UDim2.new(
+				StartPosition.X.Scale,
+				StartPosition.X.Offset+Delta.X,
+				StartPosition.Y.Scale,
+				StartPosition.Y.Offset+Delta.Y
+			)
+	end
+end)
